@@ -1,7 +1,7 @@
 /**
  * Where the pinned Tectonic engine and its TeX bundle cache live.
  *
- * The layout deliberately mirrors `dsh-doc`'s runtime convention:
+ * The layout deliberately mirrors a published npm plugin's runtime convention:
  *
  *   <DSH_HOME>/runtimes/latex-runtime-<platform>-<arch>/
  *     tectonic[.exe]      the pinned engine binary

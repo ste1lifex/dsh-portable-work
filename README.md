@@ -4,7 +4,7 @@
 解压即用、无需预装 Node / .NET（只有用 PDF 阅读工具时才需要系统 Python 3 + `pymupdf`），
 数据全部收在包内 `dsh-home\`，不碰系统目录。
 
-本目录是上游便携包的一个**非官方**发行骨架：只保留四个插件，去掉 Web UI 全家桶、桌面宠物与启动动画，
+本目录是上游便携包的一个**非官方**发行骨架：随包四个插件（详见下文）。
 桌面壳启动屏用 DeepSeek 鲸鱼矢量标志 + 「DeepSeek」字标（启动屏不内嵌任何第三方图片素材）。
 **发布包已整合离线依赖**：`DSH-portable-work-win-x64.zip` 内自带 pnpm 离线缓存 `store\`，
 解压后首启即**纯离线**重建 `node_modules`（`pnpm install --offline --frozen-lockfile`），不需要联网拉取 npm 包。
@@ -130,8 +130,6 @@ powershell -ExecutionPolicy Bypass -File launcher\build-desktop.ps1   # 产出�
 `dsh-pdf-reader` 的工作方式：PyMuPDF 抽正文文本，再把图 / 表 / 公式区域渲染成高清 PNG
 （缓存到会话工作目录的 `.dsh-pdf-reader\`），交给视觉模型用 `read_image` 读——**不是内置 OCR 引擎**。
 
-**本发行版不含**：`@linxin666/dsh-web-all`（Web UI 全家桶）、`dsh-pet-perlica`（佩丽卡桌面宠物）、
-`dsh-endfield-boot`（终末地启动画面），以及更早移除的 `dsh-doc`（它的 CPython + Tesseract OCR 运行时也已删除）。
 桌面端的启动画面由 DshDesktop 的启动屏承担（DeepSeek 鲸鱼标志 + 「DeepSeek」字标）。
 
 `dsh-latex` 的引擎不在插件包内，`start-dsh.ps1` 每次启动都会校验 `dsh-home\runtimes\latex-runtime-win32-x64`，
@@ -221,7 +219,7 @@ DSH-portable-work-win-x64\
    用户下载新的 Release 整包替换（或按 [`PORTABLE-RELEASE.md`](PORTABLE-RELEASE.md) 的流程重装）。
    `DSH_NO_UPDATE_CHECK=1` 已在 `start-dsh.ps1` 里默认设置，避免每次启动都去查更新而空等超时。
 5. **调用 LLM API 的部分仍然需要联网**（本发行版**只使用 DeepSeek 官方模型**）：
-   首启会从 `.env.example` 生成 `app-npm\.env`，填 `DEEPSEEK_API_KEY` 即可；只有贵单位提供等价的
+   首启会从 `.env.example` 生成 `app-npm\.env`，填 `DEEPSEEK_API_KEY` 即可；只有所在环境提供等价的
    DeepSeek 官方兼容网关时，才需要用 `DEEPSEEK_BASE_URL` 覆盖默认地址 —— 不预置任何第三方或自建 provider 路由。
 6. `dsh-free-search` 的联网检索依赖可用的检索后端；后端不可用时工具仍会挂载，但调用可能失败 —— 这是预期现象，不是包坏了。
 7. 依赖已整合在发布包里，因此「出问题时从 Release 重下整包替换」比「就地联网修依赖」更省事、更可复现。
@@ -264,7 +262,7 @@ DSH-portable-work-win-x64\
 | --- | --- |
 | [`PORTABLE-RELEASE.md`](PORTABLE-RELEASE.md) | 便携包怎么组装、发布前自检、目标机上的行为、离线/联网边界 |
 | [`launcher/README.md`](launcher/README.md) | 桌面壳（DshDesktop）与图标生成、构建脚本说明 |
-| [`docs/web-search-backends-research.md`](docs/web-search-backends-research.md) | 联网搜索后端的实测调研（国内直连可达性） |
+| [`docs/web-search-backends-research.md`](docs/web-search-backends-research.md) | 联网搜索后端的实测调研（各后端的可达性） |
 | [`NOTICE`](NOTICE) | 随包第三方组件与许可证、启动屏标志与标语（含商标与免责说明） |
 
 ## 许可证

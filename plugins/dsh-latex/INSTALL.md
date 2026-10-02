@@ -20,7 +20,7 @@ the harness:
    launch and tells you so. Nothing else is affected.
 
 Set `DSH_SKIP_RUNTIME_DOWNLOAD=1` to suppress the download attempt entirely
-(useful on an air-gapped machine that already has the runtime directory).
+(useful on an offline machine that already has the runtime directory).
 
 To pre-warm more packages, run once:
 

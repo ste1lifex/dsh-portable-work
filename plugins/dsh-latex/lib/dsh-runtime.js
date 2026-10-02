@@ -1,7 +1,7 @@
 /**
  * Resolve DSH host packages from wherever this plugin happens to be installed.
  *
- * A published plugin (`dsh-doc` style) lives inside the profile's
+ * A published plugin (npm-published style) lives inside the profile's
  * `node_modules`, so a plain `import '@deepseek-ai/dsh-tools'` works. A plugin
  * that is *linked* into the profile (`"dsh-latex": "link:../../plugins/dsh-latex"`)
  * keeps its real path outside `node_modules`, and Node resolves bare

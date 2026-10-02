@@ -875,7 +875,7 @@ public partial class MainWindow : Window
     private async Task LoadVersionsAsync()
     {
         _coreLocal = ReadJsonVersion(CorePkgJson) ?? "?";
-        // 原 dsh-doc 已移除，这一行现在对应 dsh-pdf-reader（变量名沿用，避免无谓改动）。
+        // 这一行对应 dsh-pdf-reader（变量名沿用，避免无谓改动）。
         _docLocal = ReadJsonVersion(Path.Combine(ProfilesWeb, "node_modules", "dsh-pdf-reader", "package.json")) ?? "?";
         bool ocrOk = await ProbePdfReaderAsync();
 

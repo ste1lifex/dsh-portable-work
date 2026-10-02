@@ -10,9 +10,6 @@
 > 跟随系统主题的**中性近黑**或**纯白**（不用彩色背景），强调色（DeepSeek 蓝 `#4D6BFE`）只作点缀；
 > 标语为两行文本 `Idealism is that you will probably never receive something back,`
 > / `but nonetheless still decide to give.`（见 `MainWindow.xaml.cs` 的 `BootPurposeSlogan` 常量）；
-> 已去除终末地元素，窗口标题为「DeepSeek Harness」。
-> 本发行版**不再包含** web UI 全家桶、桌面宠物与终末地启动画面，
-> `dsh-doc` 及其 CPython + Tesseract OCR 运行时也已移除，因此仓库里没有任何 OCR 运行时需要维护。
 
 双击包根目录下的 `DshDesktop.exe`（桌面版）即可使用。
 

@@ -57,7 +57,7 @@ litters the user's folder with `.aux` files.
 
 ## Why the resolver exists
 
-A published plugin (`dsh-doc` style) lives inside the profile's `node_modules`,
+A published plugin (npm-published style) lives inside the profile's `node_modules`,
 so `import '@deepseek-ai/dsh-tools'` just works. A plugin **linked** into a
 profile — `"dsh-latex": "link:../../../plugins/dsh-latex"` — keeps its real path
 outside every `node_modules`, and Node resolves bare specifiers from the

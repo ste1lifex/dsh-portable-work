@@ -671,7 +671,6 @@ public sealed class DshCore
 
     /// <summary>
     /// 内置回退清单：与 plugin-track.json 的 name/label/顺序保持一致。
-    /// DSH 便携版已移除 Web UI 全家桶 / 佩丽卡桌面宠物 / 终末地启动画面；
     /// local 项为 link: 本地插件（随 DSH 目录一起升级）。
     /// </summary>
     private static List<(string name, string label, bool local)> DefaultTrackedPlugins() => new()
