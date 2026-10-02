@@ -1,0 +1,30 @@
+# DSH 便携版：模型只保留 DeepSeek 官方。
+#
+# 本次清掉的本机自定义内容（两条第三方网关路由 + 默认模型钉法）：
+#   1) 一条本机推理服务路由：指向本机回环地址上的 OpenAI 兼容 /v1 端点，
+#      模型为第三方量化权重（非 DeepSeek 官方目录条目）；
+#   2) 一条第三方算力/网关路由：指向国内第三方算力平台的 OpenAI 兼容 /v1 端点，
+#      模型 id 为某第三方 DeepSeek 代理版本（带日期后缀，非官方 id）；
+#   3) 原 agent-default-model 段曾把默认模型钉在第 2 条路由上，随之删除。
+# 现在文件里既没有自定义 provider，也没有指向第三方网关的模型引用。
+#
+# 为什么这里留空数组、而不是把 agent-default-model 改写成官方：
+# 上游 @deepseek-ai/dsh-base 的 bundle patch 已经给出官方默认，见
+#   app-npm\node_modules\.pnpm\@deepseek-ai+dsh-base@0.2.0_*/node_modules/
+#     @deepseek-ai\dsh-base\cordis.patch.yml 第 82-86 行：
+#       - id: agent-default-model
+#         config:
+#           provider: deepseek-official
+#           model: deepseek-flash
+# 而官方路由 id 与官方 model id 由原生适配器包固定：
+#   - dsh-llm-deepseek-api-key\lib\index.js 第 36 行 PROVIDER = "deepseek-official"
+#   - dsh-llm-deepseek\lib\index.js 第 42-54 行 默认目录 =
+#     deepseek-flash（DeepSeek-V41-Flash）、deepseek-v4-pro（DeepSeek-V4-Pro）
+# 两者上下文窗口均为 1,000,000 token。
+# 所以本文件再写一遍只会与上游重复，且上游更换 model id 后会变成过期引用；
+# 直接删掉该段，让 DSH 使用它自己的官方默认，是更耐升级的做法。
+#
+# 本 profile 也不再覆盖上游的 llm-pi-ai 行：该行在上游本就是挂载为空（零路由），
+# 只有写入 llm-pi-ai 设置段时才会注册 provider；这里保持不写。
+[]
+

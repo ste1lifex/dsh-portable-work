@@ -1,0 +1,81 @@
+# =============================================================================
+#  DSH 便携版（Windows）发行仓库 .gitignore
+#
+#  约定：git 只放「骨架」—— 脚本 / 启动器源码 / 依赖清单与锁文件 / 插件源码 / 文档；
+#        运行时与离线缓存等大体积载荷走 GitHub Release 资产（见 PORTABLE-RELEASE.md），
+#        或者用 tools\fetch-node.ps1 自行下载重建。
+# =============================================================================
+
+# ---- 大体积载荷（Release 资产 / 自行下载）----
+/node/
+/store/
+/vendor/
+/dsh-home/runtimes/
+DshDesktop.exe
+/dist/
+*.zip
+*.7z
+
+# ---- pnpm 重建产物 ----
+app-npm/node_modules/
+dsh-home/profiles/node_modules/
+dsh-home/profiles/*/node_modules/
+
+# ---- 插件 fetch 脚本的下载暂存（引擎本体在 dsh-home/runtimes/）----
+plugins/*/.dsh-runtime/
+
+# ---- .NET 构建产物 ----
+launcher/**/bin/
+launcher/**/obj/
+launcher/publish/
+launcher/publish-desktop/
+# 重建时被“改名留存”的旧桌面版映像（正在运行的 exe 无法直接覆盖）
+DshDesktop.exe.old-*
+
+# ---- 密钥（绝不入库）----
+app-npm/.env
+**/.env
+!.env.example
+dsh-home/.credentials.yaml
+
+# ---- 本机运行态数据（各机器独立）----
+dsh-home/sessions/
+dsh-home/storages/
+dsh-home/attachments/
+dsh-home/webview2-data/
+dsh-home/skin-center/
+dsh-home/skins/
+# 皮肤中心的「当前启用项」记录（运行态，随机器变化）
+dsh-home/skin-center-active.json
+dsh-home/task-board/
+dsh-home/dsh-usage/
+dsh-home/dsh-session-archive/
+dsh-home/llm-deepseek/
+dsh-home/.repair-backups/
+dsh-home/.anonymous-user-id
+dsh-home/pet.json
+dsh-home/profiles/web/.dsh-module-fallback
+dsh-home/profiles/web/cordis.patch.yml.bak-plugin-manager
+# 语音输入插件按需下载的 SenseVoice 模型（230 MB，用时自动重下）
+dsh-home/speech-to-text/
+# 一次性设置迁移产物
+dsh-home/settings.yaml.imported
+dsh-home/dsh-web-settings-legacy-import.json
+
+# ---- 运行产物 ----
+logs/
+backups/
+node_modules/
+dsh.pid
+*.invalid-*
+*.log
+# dsh-pdf-reader 把高清区域渲染缓存在会话工作目录下
+.dsh-pdf-reader/
+
+# ---- 编辑器 / 系统 ----
+Thumbs.db
+Desktop.ini
+*.tmp
+.vs/
+.idea/
+.vscode/

@@ -1,0 +1,43 @@
+DSH Portable · Windows —— 公开发行版说明
+Copyright (c) 2026 Stellifex
+
+本仓库是 DeepSeek Harness（DSH）的第三方、**非官方** Windows 便携发行骨架：
+本发行版与 DeepSeek 官方（及任何其他公司）均无隶属或背书关系，仅由本仓库的维护者独立组装与分发。
+随本仓库（或按其说明组装）分发以下第三方组件，它们各自遵循其发布许可证：
+
+* DeepSeek Harness (DSH) —— MIT License, Copyright (c) 2026 DeepSeek
+  https://github.com/deepseek-ai/deepseek-harness
+* 随包 DSH 插件（仅以下四个，见 plugin-track.json）—— 见各自包内 LICENSE / NOTICE：
+  - dsh-pdf-reader（PDF 内容感知阅读；自身不捆绑运行时，调用系统 Python 3 + pymupdf）
+  - dsh-free-search（联网搜索）
+  - dsh-computer-use-win（Windows 电脑控制，MCP）
+  - dsh-latex（自包含 LaTeX；引擎为 Tectonic，见下）
+  本发行版**不包含** @linxin666/dsh-web-all、dsh-pet-perlica、dsh-endfield-boot，
+  以及更早移除的 dsh-doc（其 CPython + Tesseract OCR 运行时亦已删除）。
+* 桌面壳 DshDesktop（`launcher\` 内的 C# / WPF 源码与预编译 `DshDesktop.exe`）——
+  本发行版的启动器组件，随本仓库以 MIT 分发；内嵌界面使用
+  Microsoft Edge WebView2（用户本机组件，见下）。
+* Tectonic（`dsh-latex` 使用的 LaTeX 引擎，Release 载荷内提供，
+  本仓库不分发其源码）—— MIT License, Copyright (c) Tectonic contributors
+  https://github.com/tectonic-typesetting/tectonic
+* TeX Live 资源（由 Tectonic 按需拉取并缓存，各自遵循其 TeX Live 包许可证）
+  https://tug.org/texlive/
+* Node.js（Release 载荷内含）—— MIT License 及其第三方许可
+  https://nodejs.org
+* Microsoft Edge WebView2 Runtime（用户本机组件，不随包分发）—— Microsoft 许可条款
+
+启动屏标志与标语说明（商标与免责）：
+
+* 桌面壳启动屏的标志是 **DeepSeek 鲸鱼的矢量 `Path`**（`LoaderWhale`，路径数据取自
+  上游 `dsh-web-frontend/dist/favicon.svg`，viewBox `0 0 50 50`）加 "DeepSeek" 字标
+  （`LoaderWordmark`）；填充色走 `{DynamicResource BootTextPrimary}`，随系统深浅主题自动换色。
+  上游 DSH 以 MIT 许可发布，本发行版对上述矢量数据的使用遵循该许可。
+* **本发行版不包含任何 GE HealthCare 的商标、Logo 或品牌素材**：启动屏没有 Logo 图片文件，
+  任务栏 / exe 图标为本发行版自有图标，界面与文档均未使用第三方商标或品牌元素。
+* 启动屏背景跟随系统主题：深色为中性近黑、浅色为纯白，**不使用彩色背景**；
+  界面强调色（DeepSeek 蓝 `#4D6BFE`）仅作点缀（进度轨、分段、强调文字）。
+* 启动屏标语为两行文本（见 `MainWindow.xaml.cs` 的 `BootPurposeSlogan` 常量）：
+  `Idealism is that you will probably never receive something back,`
+  `but nonetheless still decide to give.`
+* DeepSeek、DeepSeek Harness 等名称与商标归其各自权利人所有；本发行版为非官方第三方发行，
+  与 DeepSeek 官方无隶属或背书关系。

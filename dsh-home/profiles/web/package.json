@@ -1,0 +1,23 @@
+{
+  "name": "dsh-profile-web",
+  "private": true,
+  "dependencies": {
+    "dsh-computer-use-win": "^0.2.3",
+    "dsh-free-search": "0.6.5",
+    "dsh-latex": "link:../../../plugins/dsh-latex",
+    "dsh-pdf-reader": "^0.2.0"
+  },
+  "dsh": {
+    "profile": {
+      "bundles": [
+        "@deepseek-ai/dsh-base",
+        "@deepseek-ai/dsh-web-app",
+        "dsh-free-search",
+        "dsh-computer-use-win",
+        "dsh-latex",
+        "@deepseek-ai/dsh-experimental-voice-input-bundle",
+        "dsh-pdf-reader"
+      ]
+    }
+  }
+}

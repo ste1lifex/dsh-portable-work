@@ -1,0 +1,65 @@
+# Your patch layer for this dsh profile, applied after every bundle layer:
+# a top-level YAML array of loader patch entries (id-targeted config
+# overrides, disables, and insert lists; `!!js` expressions allowed).
+
+# DSH 便携版：这里去掉了三处上游插件
+#   - @linxin666/dsh-web-all（Web UI 全家桶）
+#   - dsh-pet-perlica（佩丽卡桌面宠物，原 pet-perlica 插入行）
+#   - dsh-endfield-boot（终末地启动画面）
+# 它们的 profile 依赖、bundle 行与插入/覆盖补丁都已一并移除，插件源码目录也不再随包。
+# 桌面端的启动画面由 DshDesktop 的启动屏承担（DeepSeek 鲸鱼矢量标志 + 字标，见 launcher\DshDesktop）。
+
+# dsh-doc (local PDF/Office/Tesseract OCR) was REMOVED here, together with its
+# bundled CPython+Tesseract runtime and this config block. Its upstream
+# (Sqhao-O/dsh-docs) stopped at 0.1.1 on 2026-08-15 and its peerDependencies
+# pinned @deepseek-ai/dsh-tools to ^0.1.0-rc.6, so DSH 0.2.0-rc.2 refused the
+# bundle ("skipping profile bundle dsh-doc") and none of its dshdoc_* tools
+# ever appeared.
+#
+# It is replaced by dsh-pdf-reader (host-only, CPU-only, no config needed):
+# PyMuPDF extracts the text layer and renders figures/tables/formulas as
+# high-DPI PNG region crops into <workspace>\.dsh-pdf-reader, which the vision
+# model reads with read_image. It ships no runtime; the only external
+# requirement is a system Python 3 with `pymupdf` (see start-dsh.ps1, which
+# reports readiness on every launch). Its bundle patch adds the three tools
+# (pdf_scan / pdf_read_page / pdf_render_region) on its own, so nothing is
+# inserted in this file.
+
+# dsh-computer-use-win: the bundle's own patch locates the MCP server with
+# `new URL('mcp/server.mjs', baseUrl)`, assuming baseUrl is the patch file's
+# directory. On DSH 0.1.5-rc.1 the Loader anchors baseUrl at the PROFILE
+# directory instead (see @deepseek-ai/dsh/lib/profile-boot-*.js), so it
+# resolved to profiles/web/mcp/server.mjs -> MODULE_NOT_FOUND, the stdio
+# server crash-looped, and no mcp__wincu__* tools ever appeared.
+# Patch semantics assign `config` wholesale (no deep merge), so the corrected
+# row repeats every key; args is re-anchored to the profile directory.
+- id: mcp-dsh-computer-use-win
+  config:
+    serverName: wincu
+    transport: stdio
+    command: !!js process.execPath
+    args:
+      - !!js "process.getBuiltinModule('node:url').fileURLToPath(new
+        URL('node_modules/dsh-computer-use-win/mcp/server.mjs', baseUrl))"
+    toolCallTimeoutMs: 60000
+    failOnStartupError: false
+
+# dsh-latex: self-contained LaTeX (latex_health / latex_compile / latex_math).
+# The pinned Tectonic engine lives outside the plugin package, under
+# dsh-home\runtimes (the only bundled runtime left after dsh-doc's removal).
+# runtimeDir is resolved at mount time from DSH_HOME (set by
+# start-dsh.ps1 / dsh.cmd), so the whole portable folder can be moved to another
+# path or machine without editing this file. Patch semantics assign `config`
+# wholesale, so every key the bundle declared is repeated here.
+- id: dsh-latex
+  config:
+    runtimeDir: !!js "process.env.DSH_HOME + '/runtimes/latex-runtime-' +
+      process.platform + '-' + process.arch"
+    allowedLocalRoots: []
+    offline: false
+    allowShellEscape: false
+    defaultTimeoutMs: 180000
+- id: ui-settings-general
+  name: "@deepseek-ai/dsh-client-ui-settings-general"
+  config:
+    welcomeNoticeVersion: 2026-09-28.1
