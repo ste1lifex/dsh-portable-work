@@ -17,6 +17,10 @@ namespace DshDesktop;
 /// 容错：json 里所有字段都由插件按字符串存；这里字符串照读，数字也认（转成文本），
 /// 非法/缺字段一律退化成“未配置”（空串），任何异常都不抛给启动流程 —— 启动屏
 /// 宁可回落内置品牌，也不能因为一份坏 json 起不来。
+///
+/// 「json 字段 → 桌面启动屏落点」的完整映射表写在
+/// <c>MainWindow.ApplyBootBranding()</c> 的注释里（那里是把配置翻译成界面的唯一地方）；
+/// 改字段语义时两处一起看。
 /// </summary>
 internal sealed class DshBrandConfig
 {
@@ -47,6 +51,35 @@ internal sealed class DshBrandConfig
 
     /// <summary>深色主题强调色（colorDark）：留空＝跟随 <see cref="Color"/>（与 Web 端同规则）。</summary>
     public string ColorDark { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// 产品名（<c>name</c>，与 Web 端侧栏产品名同一字段）：桌面启动屏用作字标
+    /// <c>LoaderWordmark</c> 的文字；留空＝内置 "DeepSeek"。
+    /// 注意：Web 端该字段还允许图片 / Data URL，桌面字标是 <c>TextBlock</c>，
+    /// 这里只按**纯文字**处理（不做图片渲染）。
+    /// </summary>
+    public string Name { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// 隐藏产品名文字（<c>hideName</c>）：判定与 Web 端**完全同规则** —— 只有值恰好是
+    /// <c>"true"</c>（读入时已 Trim，区分大小写）才算打开。
+    /// 桌面端对应「隐藏启动屏字标」：只影响字标本身，不影响标志图片、进度轨、
+    /// 仪表组与日志面板。
+    /// </summary>
+    public bool HideName { get; private set; }
+
+    /// <summary>
+    /// 隐藏主标题（<c>hideHeadline</c>）：判定规则同 <see cref="HideName"/>（值恰为
+    /// <c>"true"</c>）。Web 端是“logo 自带文字时不重复显示 Hero 主标题”，
+    /// 桌面端对应「不显示启动屏标语」：只影响标语，不影响字标与标志。
+    /// </summary>
+    public bool HideHeadline { get; private set; }
+
+    /// <summary>
+    /// 窗口标题（<c>title</c>，与 Web 端“浏览器标签页标题”同一字段）：
+    /// 桌面端用作 <c>MainWindow.Title</c>；留空＝保持内置 "DeepSeek Harness"。
+    /// </summary>
+    public string Title { get; private set; } = string.Empty;
 
     /// <summary>实际读取的配置文件路径（日志用；文件不存在时也是这个路径）。</summary>
     public string ConfigPath { get; private set; } = string.Empty;
@@ -80,6 +113,12 @@ internal sealed class DshBrandConfig
             cfg.DesktopLogoHeight = ReadText(root, "desktopLogoHeight");
             cfg.Color = ReadText(root, "color");
             cfg.ColorDark = ReadText(root, "colorDark");
+            // 与 WebUI 同字段、同语义：产品名 / 隐藏产品名 / 隐藏主标题 / 窗口标题
+            // （hideName / hideHeadline 与 Web 端一样只认字面量 "true"）。
+            cfg.Name = ReadText(root, "name");
+            cfg.HideName = ReadText(root, "hideName") == "true";
+            cfg.HideHeadline = ReadText(root, "hideHeadline") == "true";
+            cfg.Title = ReadText(root, "title");
         }
         catch
         {
@@ -150,4 +189,10 @@ internal sealed class DshBrandConfig
             .Trim();
         return text.Length == 0 ? null : text;
     }
+
+    /// <summary>字标文字：空/纯空白 = null（调用方回落内置 "DeepSeek"）。</summary>
+    public string? NameOrNull() => Name.Length == 0 ? null : Name;
+
+    /// <summary>窗口标题：空/纯空白 = null（调用方保持 XAML 里的内置标题）。</summary>
+    public string? TitleOrNull() => Title.Length == 0 ? null : Title;
 }

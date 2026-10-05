@@ -88,6 +88,12 @@ public partial class MainWindow : Window
         "Idealism is that you will probably never receive something back,\n" +
         "but nonetheless still decide to give.";
 
+    /// <summary>
+    /// 启动屏字标（<c>LoaderWordmark</c>）的内置文字：json 的 <c>name</c>
+    /// 留空 / 缺失时用它（与 XAML 里写的初始值一致）。
+    /// </summary>
+    private const string BootProductName = "DeepSeek";
+
     /// <summary>左侧进度轨宽度（XAML 里 LoaderTrack/LoaderFill/LoaderWipe 同宽）。</summary>
     private const double BootRailWidth = 8;
 
@@ -232,6 +238,9 @@ public partial class MainWindow : Window
         // DSH 启动屏：品牌标志（配置图片 / 内置 DeepSeek 鲸鱼矢量）+ 标语
         // + 几何分段格 + 渐变扫光（都放在主题落地之后，保证第一帧就是当前深浅色）
 
+        // 窗口标题（json 的 title）：只在启动时设一次 —— 与深浅主题无关，
+        // 所以不放进 ApplyBootBranding()（那个会被 StartLoader/切主题重复调用）。
+        ApplyWindowTitle();
         ApplyBootBranding();
         ApplyBootGradients();
 
@@ -661,36 +670,99 @@ public partial class MainWindow : Window
     // =====================================================================
 
     /// <summary>
-    /// 启动屏品牌落点：标志（配置图片 / 内置鲸鱼） + 标语。切主题时重跑一遍
-    /// （同一份配置按深浅挑对应值），不需要重新读 json。
+    /// 启动屏品牌落点：字标（文字 / 是否隐藏） + 标志（配置图片 / 内置鲸鱼） + 标语。
+    /// 切主题时重跑一遍（同一份配置按深浅挑对应值），不需要重新读 json。
+    ///
+    /// <para>
+    /// ===== json 字段 → 桌面启动屏落点（与 WebUI 共用同一份
+    /// <c>&lt;DSH_HOME&gt;\dsh-brand.json</c>，语义对齐；“留空”= 字段缺失或空串）=====
+    /// </para>
+    /// <list type="table">
+    /// <item><term>name</term><description><c>LoaderWordmark</c> 的文字；留空 = 内置 "DeepSeek"（<see cref="BootProductName"/>）</description></item>
+    /// <item><term>hideName === "true"</term><description>隐藏 <c>LoaderWordmark</c> —— 只隐藏字标本身，不影响 logo 图片、内置鲸鱼、进度轨、仪表组与日志面板</description></item>
+    /// <item><term>hideHeadline === "true"</term><description>隐藏 <c>LoaderSlogan</c> 标语 —— 只影响标语，不影响字标与 logo</description></item>
+    /// <item><term>logoUrl / logoUrlDark</term><description>标志图片优先（按深浅主题挑值，暗色留空跟随浅色）；没配 / 读不出来 = 内置鲸鱼</description></item>
+    /// <item><term>bootSlogan</term><description>标语文本（<c>\n</c> 与真实换行都算换行）；留空 = 内置常量 <see cref="BootPurposeSlogan"/></description></item>
+    /// <item><term>desktopLogoHeight</term><description>标志高度 px；留空 = 96，图片与内置鲸鱼都适用</description></item>
+    /// <item><term>color / colorDark</term><description>品牌强调色；留空 = Theme.cs 的内置默认色</description></item>
+    /// <item><term>title</term><description>窗口标题；留空 = 内置 "DeepSeek Harness"（见 <see cref="ApplyWindowTitle"/>，只在启动时设一次）</description></item>
+    /// </list>
+    /// <para>
+    /// ===== 两条互不牵连的可见性规则（唯一判定，别再往别处加条件）=====
+    /// </para>
+    /// <list type="bullet">
+    /// <item><description>字标可见 ⇔ <c>hideName !== "true"</c>。因此：内置鲸鱼 + hideName=true → 只剩鲸鱼；图片 logo + hideName=true → 只剩图片；图片 logo + hideName 非 true → 图片与字标并排。</description></item>
+    /// <item><description>标语可见 ⇔ <c>hideHeadline !== "true"</c>；可见时文字走 bootSlogan（留空回落内置常量）。</description></item>
+    /// </list>
+    /// <para>
+    /// 没配 json / 字段缺失时 = 内置鲸鱼 + "DeepSeek" 字标 + 内置标语 + 窗口标题
+    /// "DeepSeek Harness"，即与本映射加入前的行为完全一致。
+    /// </para>
     /// </summary>
     private void ApplyBootBranding()
     {
+        ApplyBootWordmark();
         ApplyBootSlogan();
         ApplyBootLogo();
     }
 
     /// <summary>
+    /// 桌面窗口标题：json 的 <c>title</c>（与 WebUI 的“浏览器标签页标题”同字段）。
+    /// 留空 / 缺字段 / json 读不到 = 保持 XAML 里的内置 "DeepSeek Harness"。
+    /// 只在启动时设一次（标题与深浅主题无关，也没有别的调用点）。
+    /// </summary>
+    private void ApplyWindowTitle()
+    {
+        var title = _brand.TitleOrNull();
+        if (title is not null) Title = title;
+    }
+
+    /// <summary>
+    /// 启动屏字标（<c>LoaderWordmark</c>）：
+    /// <list type="bullet">
+    /// <item><description>文字：json 的 <c>name</c>；留空 = 内置 "DeepSeek"（<see cref="BootProductName"/>）。</description></item>
+    /// <item><description>可见性：<c>hideName === "true"</c> 时隐藏 —— 与标志是配置图片还是内置鲸鱼无关（WebUI 的同名字段就是“隐藏产品名文字”）。</description></item>
+    /// </list>
+    /// 与 <see cref="ApplyBootLogo"/> 的分工：这里只管字标“写什么 / 显不显示”，
+    /// 那里只管“图片 logo 还是内置鲸鱼”，两边都只碰自己的元素，互不覆盖。
+    /// </summary>
+    private void ApplyBootWordmark()
+    {
+        if (LoaderWordmark is null) return;
+        LoaderWordmark.Text = _brand.NameOrNull() ?? BootProductName;
+        LoaderWordmark.Visibility = _brand.HideName ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    /// <summary>
     /// 启动屏标语：json 的 <c>bootSlogan</c> 优先（<c>\n</c> 与真实换行都算换行），
     /// 留空沿用内置常量 <see cref="BootPurposeSlogan"/>。
+    /// <c>hideHeadline === "true"</c> 时整条标语隐藏（与 WebUI 同义：logo 自带文字时
+    /// 不重复显示主标题）；此时连文字都不再写，Collapsed 后也不占位。
     /// 排版保持现状：XAML 里 <c>LoaderSlogan</c> 仍是 TextAlignment=Center + NoWrap，
-    /// 这里只负责文本，不做任何自动换行/对齐处理。
+    /// 这里只负责文本与显隐，不做任何自动换行/对齐处理。
     /// </summary>
     private void ApplyBootSlogan()
     {
         if (LoaderSlogan is null) return;
+        if (_brand.HideHeadline)
+        {
+            LoaderSlogan.Visibility = Visibility.Collapsed;
+            return;
+        }
+        LoaderSlogan.Visibility = Visibility.Visible;
         LoaderSlogan.Text = _brand.SloganOrNull() ?? BootPurposeSlogan;
     }
 
     /// <summary>
     /// 启动屏标志：配了 <c>logoUrl</c>（浅色）/ <c>logoUrlDark</c>（深色）就显示该图片，
-    /// 并隐藏内置的 <c>LoaderWhale</c> + <c>LoaderWordmark</c>；没配 / 读不出来则保持内置
-    /// 鲸鱼 + "DeepSeek" 字标。高度统一走 <c>desktopLogoHeight</c>（留空＝96px），
-    /// 图片与内置鲸鱼都适用。
+    /// 并隐藏内置的 <c>LoaderWhale</c>；没配 / 读不出来则保持内置鲸鱼。
+    /// 高度统一走 <c>desktopLogoHeight</c>（留空＝96px），图片与内置鲸鱼都适用。
+    /// 字标 <c>LoaderWordmark</c> 的显隐**不在这里决定** —— 它只由 <c>hideName</c> 决定，
+    /// 见 <see cref="ApplyBootWordmark"/>；本方法只管图片与内置鲸鱼二选一。
     /// </summary>
     private void ApplyBootLogo()
     {
-        if (LoaderWhale is null || LoaderLogoImage is null || LoaderWordmark is null) return;
+        if (LoaderWhale is null || LoaderLogoImage is null) return;
 
         double height = _brand.LogoHeight;
         var value = _brand.PickLogo(DsTheme.Current == DsThemeKind.Dark);
@@ -717,9 +789,9 @@ public partial class MainWindow : Window
         LoaderLogoImage.Visibility = hasImage ? Visibility.Visible : Visibility.Collapsed;
         if (!hasImage) LoaderLogoImage.Source = null;
 
-        var builtIn = hasImage ? Visibility.Collapsed : Visibility.Visible;
-        LoaderWhale.Visibility = builtIn;
-        LoaderWordmark.Visibility = builtIn;
+        // 内置鲸鱼：配了能读出来的图片就让位。字标的显隐由 ApplyBootWordmark()
+        // 按 hideName 单独决定，这里不要再碰 LoaderWordmark，否则两条规则会互相覆盖。
+        LoaderWhale.Visibility = hasImage ? Visibility.Collapsed : Visibility.Visible;
         if (!hasImage)
         {
             // 内置鲸鱼也用同一高度（XAML 里原本写死 60×60，正方形保持不变）
@@ -738,13 +810,16 @@ public partial class MainWindow : Window
         var logo = _brand.PickLogo(DsTheme.Current == DsThemeKind.Dark);
         var accent = DsTheme.BrandAccent(DsTheme.Current);
         var slogan = _brand.SloganOrNull();
+        var title = _brand.TitleOrNull();
         return string.Concat(
             "dsh-brand.json = ", _brand.ConfigPath,
             _brand.FileExists ? string.Empty : "（不存在）",
             _brand.LoadFailed ? "（解析失败，已用内置兜底）" : string.Empty,
-            "；标志 = ", logo.Length == 0 ? "内置鲸鱼 + 字标" : logo,
+            "；标志 = ", logo.Length == 0 ? "内置鲸鱼" : logo,
             "；高度 = ", _brand.LogoHeight.ToString("0", CultureInfo.InvariantCulture), "px",
-            "；标语 = ", slogan is null ? "内置常量" : "配置项",
+            "；字标 = ", _brand.HideName ? "隐藏（hideName）" : (_brand.NameOrNull() ?? "内置 DeepSeek"),
+            "；标语 = ", _brand.HideHeadline ? "隐藏（hideHeadline）" : (slogan is null ? "内置常量" : "配置项"),
+            "；标题 = ", title ?? "内置 DeepSeek Harness",
             "；强调色 = ", accent is null ? "内置默认" : accent.Value.ToString(CultureInfo.InvariantCulture));
     }
 

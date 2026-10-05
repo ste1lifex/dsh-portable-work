@@ -191,11 +191,24 @@ DSH-portable-work-win-x64\
 ## 桌面端（DshDesktop）
 
 - `DshDesktop.exe` 是**自包含单文件**，内嵌 WebView2 承载 DSH 界面，无需安装 .NET；首次运行会先解压内置文件到临时目录（慢几秒属正常）。
-- **启动屏标志是 DeepSeek 鲸鱼矢量 + 「DeepSeek」字标**：鲸鱼是 XAML 里的矢量 `Path`
+- **启动屏默认标志是 DeepSeek 鲸鱼矢量 + 「DeepSeek」字标**：鲸鱼是 XAML 里的矢量 `Path`
   （路径数据抄自上游 `dsh-web-frontend/dist/favicon.svg`，viewBox `0 0 50 50`），随主题自动换色，
   **不内嵌任何第三方图片素材**；背景随系统主题为**纯白或中性近黑**（不用彩色底），强调色（DeepSeek 蓝 `#4D6BFE`）只作点缀；
-  标语为两行文本 `Idealism is that you will probably never receive something back,` /
-  `but nonetheless still decide to give.`（见 `MainWindow.xaml.cs` 的 `BootPurposeSlogan` 常量）；窗口标题为「DeepSeek Harness」。
+  默认标语为两行文本 `Idealism is that you will probably never receive something back,` /
+  `but nonetheless still decide to give.`（见 `MainWindow.xaml.cs` 的 `BootPurposeSlogan` 常量）；默认窗口标题为「DeepSeek Harness」。
+- **启动屏与窗口标题跟网页端「设置 → 品牌」共用同一份 `dsh-home\dsh-brand.json`**，
+  改完 json 需**重启 DshDesktop** 才生效（不做文件监听）。字段落点如下，任何字段留空 / 缺失都＝保持内置观感：
+
+  | json 字段 | 桌面启动屏效果 |
+  | --- | --- |
+  | `name` | 字标文字（留空＝内置 `DeepSeek`） |
+  | `hideName`（`"true"`） | 隐藏字标 —— 只影响字标本身；图片 logo、鲸鱼、进度轨、仪表组、日志面板都不受影响 |
+  | `hideHeadline`（`"true"`） | 隐藏启动屏标语 —— 只影响标语，不影响字标与标志 |
+  | `title` | 窗口标题（留空＝内置 `DeepSeek Harness`） |
+  | `logoUrl` / `logoUrlDark` | 按深浅主题显示标志图片（留空＝内置鲸鱼）；`hideName` 非 `"true"` 时图片与字标并排 |
+  | `bootSlogan` | 标语文本（留空＝内置标语） |
+  | `desktopLogoHeight` | 标志高度 px（留空＝96，图片与内置鲸鱼都适用） |
+  | `color` / `colorDark` | 品牌强调色（留空＝内置 DeepSeek 蓝） |
 - 需要系统 **Edge WebView2 运行时**（Win11 / 带 Edge 的 Win10 已预装）。缺失时用
   `start-dsh.bat` + 系统浏览器即可，功能完整；装 WebView2 本身需要网络。
 - 桌面壳只负责界面与调度，实际操作仍走包内 PowerShell 脚本，升级 / 依赖修复逻辑不会与脚本分叉。
