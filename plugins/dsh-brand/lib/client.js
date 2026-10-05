@@ -19,13 +19,13 @@ window.__ModuleLoader__.load({
     const React = require('react')
     const h = React.createElement
     const API = '/api/dsh-brand/config'
-    const KEYS = ['name', 'version', 'useDshVersion', 'headline', 'badge', 'intro', 'logoText', 'logoUrl', 'logoUrlDark', 'title', 'favicon', 'faviconDark', 'sendIcon', 'stopIcon', 'hideNotice', 'hideName', 'hideHeadline', 'thinkText', 'colorEnabled', 'colorTargets', 'color', 'colorDark', 'markHeight', 'heroMarkHeight']
+    const KEYS = ['name', 'version', 'useDshVersion', 'headline', 'badge', 'intro', 'logoText', 'logoUrl', 'logoUrlDark', 'title', 'favicon', 'faviconDark', 'sendIcon', 'stopIcon', 'hideNotice', 'hideName', 'hideHeadline', 'thinkText', 'colorEnabled', 'colorTargets', 'color', 'colorDark', 'markHeight', 'heroMarkHeight', 'bootSlogan', 'desktopLogoHeight']
     const RUNTIME_KEYS = KEYS.concat(['dshBuildVersion']).concat(KEYS.map((k) => k + 'Resolved'))
     const ALL_COLOR_TARGETS = 'sidebar,project,think,diving,composer'
 
     /** Every field empty: stock GUI branding; color feature remains enabled. */
     function blank() {
-      return { name: '', version: '', useDshVersion: 'true', dshBuildVersion: '', headline: '', badge: '', intro: '', logoText: '', logoUrl: '', logoUrlDark: '', title: '', favicon: '', faviconDark: '', sendIcon: '', stopIcon: '', hideNotice: '', hideName: '', hideHeadline: '', thinkText: '', colorEnabled: 'true', colorTargets: ALL_COLOR_TARGETS, color: '', colorDark: '', markHeight: '', heroMarkHeight: '' }
+      return { name: '', version: '', useDshVersion: 'true', dshBuildVersion: '', headline: '', badge: '', intro: '', logoText: '', logoUrl: '', logoUrlDark: '', title: '', favicon: '', faviconDark: '', sendIcon: '', stopIcon: '', hideNotice: '', hideName: '', hideHeadline: '', thinkText: '', colorEnabled: 'true', colorTargets: ALL_COLOR_TARGETS, color: '', colorDark: '', markHeight: '', heroMarkHeight: '', bootSlogan: '', desktopLogoHeight: '' }
     }
 
     /** Keep only known string fields (server already caps their length). */
@@ -329,6 +329,8 @@ window.__ModuleLoader__.load({
       css += '.dsh-brand-field-label{font-size:13px;font-weight:500;color:var(--dsw-alias-label-secondary);}'
       css += '.dsh-brand-field-input{box-sizing:border-box;width:100%;height:38px;padding:6px 12px;border:1px solid var(--dsw-alias-border-l2);border-radius:10px;background:transparent;color:var(--dsw-alias-label-primary);font-size:13px;line-height:20px;outline:none;font-family:inherit;}'
       css += '.dsh-brand-field-input:focus{border-color:var(--dsw-alias-interactive-bg-hover);}'
+      // 多行输入（启动屏标语）：默认 3 行高、可纵向拖拽
+      css += '.dsh-brand-field-textarea{height:auto;min-height:64px;resize:vertical;line-height:18px;}'
       css += '.dsh-brand-actions{display:flex;align-items:center;gap:10px;margin-top:4px;}'
       css += '.dsh-brand-btn{min-width:88px;height:34px;padding:0 16px;border:none;border-radius:17px;font-size:13px;font-weight:500;cursor:pointer;}'
       css += '.dsh-brand-btn-primary{background:var(--dsw-alias-label-primary);color:var(--dsw-alias-label-primary-inverted);}'
@@ -634,6 +636,17 @@ window.__ModuleLoader__.load({
             placeholder,
             onChange: (ev) => updateField(key, ev !== null && typeof ev === 'object' && ev.target ? String(ev.target.value) : ''),
           }))
+        // 多行文本字段（启动屏标语）：换行可以直接敲，也可以写字面量 \n
+        const textArea = (key, label, placeholder) => h('div', { className: 'dsh-brand-field' },
+          h('label', { className: 'dsh-brand-field-label' }, label),
+          h('textarea', {
+            className: 'dsh-brand-field-input dsh-brand-field-textarea',
+            value: form[key],
+            placeholder,
+            rows: 3,
+            spellCheck: false,
+            onChange: (ev) => updateField(key, ev !== null && typeof ev === 'object' && ev.target ? String(ev.target.value) : ''),
+          }))
         const colorField = (key, label) => h('div', { className: 'dsh-brand-field' },
           h('label', { className: 'dsh-brand-field-label' }, label),
           h('div', { className: 'dsh-brand-colorrow' },
@@ -703,7 +716,8 @@ window.__ModuleLoader__.load({
             h('div', null, '图片类字段支持：网络 URL、Data URL、原始 SVG 代码，或相对 $DSH_HOME 的本地路径（如 ./brand/logo.svg，文件放 dsh-home\\brand\\ 下）。'),
             h('div', null, '深色主题商标留空＝跟随浅色主题商标；侧栏 / Hero 商标高度留空＝默认 45px / 128px。'),
             h('div', null, 'Hero 三项（主标题 / 徽标 / 简介）任一填写即接管新会话页头部，全部留空显示官方默认。'),
-            h('div', null, '品牌主色留空时从商标图片自动取色；暗色主题主色留空＝跟随主色。主色只作用于侧栏图标、项目文件夹、Think / Deep diving 与发送停止按钮，不修改全局配色。')),
+            h('div', null, '品牌主色留空时从商标图片自动取色；暗色主题主色留空＝跟随主色。主色只作用于侧栏图标、项目文件夹、Think / Deep diving 与发送停止按钮，不修改全局配色。'),
+            h('div', null, '桌面启动屏（DshDesktop）：商标、品牌主色与「桌面启动屏」分组里的两个字段同时作用于 DshDesktop 的原生启动画面 —— 这些字段需要「重启 DshDesktop」后生效。')),
           section('侧栏'),
           field('name', '产品名称（侧栏，文字 / 图片 URL / SVG）', '如：Acme Harness 或 data:image/svg+xml,…'),
           field('version', '版本徽标（文字 / 图片 URL / SVG）', '留空时可显示 DSH 构建版本；如：v1.0.0'),
@@ -733,6 +747,11 @@ window.__ModuleLoader__.load({
           section('尺寸与显示'),
           field('markHeight', '侧栏商标高度 px（留空＝45）', '如：45'),
           field('heroMarkHeight', 'Hero 商标高度 px（留空＝128）', '如：128'),
+          // 桌面启动屏（DshDesktop）：桌面壳启动时直接读同一份 $DSH_HOME/dsh-brand.json，
+          // 这里只管写文件；改完要重启 DshDesktop 才会看到效果（不做文件监听）。
+          section('桌面启动屏（DshDesktop）'),
+          textArea('bootSlogan', '启动屏标语（留空＝内置标语）', '多行文本；换行直接回车，或写字面量 \\n；留空使用内置标语'),
+          field('desktopLogoHeight', '启动屏标志高度 px（留空＝96）', '如：96（logoUrl 图片与内置鲸鱼都适用）'),
           h('div', { className: 'dsh-brand-field dsh-brand-field-row' },
             h('label', { className: 'dsh-brand-field-label' }, '隐藏产品名文字（logo 自带文字时）'),
             h('input', {

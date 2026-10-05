@@ -2,6 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -35,6 +36,18 @@ public sealed class DsLogLine
 public partial class MainWindow : Window
 {
     private readonly DshCore _core;
+
+    /// <summary>
+    /// 桌面启动屏的品牌配置：与 Web 端 dsh-brand 插件读**同一份**
+    /// <c>&lt;DSH_HOME&gt;\dsh-brand.json</c>（路径由 DshCore 按 exe 位置推算）。
+    /// 启动时读一次；切深浅主题时用这份内存配置按主题挑对应字段
+    /// （logoUrl/logoUrlDark、color/colorDark），所以改完 json 是**下次启动**生效。
+    /// </summary>
+    private readonly DshBrandConfig _brand;
+
+    /// <summary>标志读取失败的告警只写一次（避免每次 StartLoader 都刷一行）。</summary>
+    private bool _brandLogoWarned;
+
     private readonly DispatcherTimer _statusTimer;
     private bool _allowClose;
     private bool _closePromptOpen;
@@ -204,15 +217,22 @@ public partial class MainWindow : Window
         // 版本号不再放顶栏（和网页品牌挤在一起很碎），收到「版本信息」面板里
         RowShellVer.Text = "桌面版 v" + (ver == null ? "1.0.0" : ver.ToString(3));
 
+        // 品牌配置（与 Web 端 dsh-brand 插件同一份 $DSH_HOME\dsh-brand.json）：
+        // 启动时读一次，之后切主题只换深浅取值，不再碰文件。
+        _brand = DshBrandConfig.Load(_core.DshHome);
+        // 强调色覆盖必须在第一次 DsTheme.Apply 之前写入：启动屏第一帧就是品牌色
+        // （留空 = 两个参数都为 null，走 Theme.cs 的内置默认色）。
+        DsTheme.SetBrandAccent(_brand.PickAccent(dark: false), _brand.PickAccent(dark: true));
+
         // 主题：先用 Windows 深浅色落地（页面还没加载），WebView 起来后由页面回传的真实主题接管
         DsTheme.Apply(DsTheme.Forced() ?? (DsTheme.OsAppsLight() ? DsThemeKind.Light : DsThemeKind.Dark));
         DsTheme.Changed += OnThemeChanged;
         ApplyWindowIcon();
 
-        // DSH 启动屏：DeepSeek 鲸鱼标志（矢量，随主题自动换色）+ 标语
+        // DSH 启动屏：品牌标志（配置图片 / 内置 DeepSeek 鲸鱼矢量）+ 标语
         // + 几何分段格 + 渐变扫光（都放在主题落地之后，保证第一帧就是当前深浅色）
 
-        ApplyBootSlogan();
+        ApplyBootBranding();
         ApplyBootGradients();
 
         _statusTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
@@ -230,6 +250,8 @@ public partial class MainWindow : Window
         // 阶段驱动进度的取值来源（验收用）：hold / preview 都在这行日志里
         LogLine($"[启动屏] 阶段驱动进度已启用；hold={BootExtraHoldMs}ms preview={BootPreviewMs}ms",
                 DshLogKind.Dim);
+        // 品牌配置来源（验收用）：一眼看出启动屏用的是配置还是内置兜底
+        LogLine("[品牌] " + DescribeBrand(), DshLogKind.Dim);
 
         // DSH_DESKTOP_SPLASH_PREVIEW_MS：预览期内不因连接成功/失败而隐藏遮罩
         if (BootPreviewMs > 0) ArmSplashPreview();
@@ -455,7 +477,8 @@ public partial class MainWindow : Window
     private void OnThemeChanged(DsThemeKind kind)
     {
         ApplyWindowIcon();
-        // 启动屏的标志是矢量（随主题自动换色），这里只需重建代码现拼的渐变。
+        // 启动屏标志：配了图片就按深浅换一张（logoUrl / logoUrlDark），没配仍是内置矢量鲸鱼。
+        ApplyBootLogo();
 
         // 启动屏的渐变扫光是代码现拼的 LinearGradientBrush，不会跟着 DynamicResource
         // 自动换色，必须在这里重建；分段格子的颜色用的是资源引用，会自动更新。
@@ -637,12 +660,92 @@ public partial class MainWindow : Window
     //  DSH boot-plate loader (rail progress + sweep/fade finish)
     // =====================================================================
 
-    /// <summary>把 BootPurposeSlogan 常量写进启动屏的标语槽位（换标语只改那个常量）。</summary>
+    /// <summary>
+    /// 启动屏品牌落点：标志（配置图片 / 内置鲸鱼） + 标语。切主题时重跑一遍
+    /// （同一份配置按深浅挑对应值），不需要重新读 json。
+    /// </summary>
+    private void ApplyBootBranding()
+    {
+        ApplyBootSlogan();
+        ApplyBootLogo();
+    }
+
+    /// <summary>
+    /// 启动屏标语：json 的 <c>bootSlogan</c> 优先（<c>\n</c> 与真实换行都算换行），
+    /// 留空沿用内置常量 <see cref="BootPurposeSlogan"/>。
+    /// 排版保持现状：XAML 里 <c>LoaderSlogan</c> 仍是 TextAlignment=Center + NoWrap，
+    /// 这里只负责文本，不做任何自动换行/对齐处理。
+    /// </summary>
     private void ApplyBootSlogan()
     {
-        // 标语是两行整句，不再逐字插 hair space（那样会过宽）：
-        // 断行由常量里的 \n 控制，居中由 XAML 的 TextAlignment/TextWrapping 控制。
-        if (LoaderSlogan is not null) LoaderSlogan.Text = BootPurposeSlogan;
+        if (LoaderSlogan is null) return;
+        LoaderSlogan.Text = _brand.SloganOrNull() ?? BootPurposeSlogan;
+    }
+
+    /// <summary>
+    /// 启动屏标志：配了 <c>logoUrl</c>（浅色）/ <c>logoUrlDark</c>（深色）就显示该图片，
+    /// 并隐藏内置的 <c>LoaderWhale</c> + <c>LoaderWordmark</c>；没配 / 读不出来则保持内置
+    /// 鲸鱼 + "DeepSeek" 字标。高度统一走 <c>desktopLogoHeight</c>（留空＝96px），
+    /// 图片与内置鲸鱼都适用。
+    /// </summary>
+    private void ApplyBootLogo()
+    {
+        if (LoaderWhale is null || LoaderLogoImage is null || LoaderWordmark is null) return;
+
+        double height = _brand.LogoHeight;
+        var value = _brand.PickLogo(DsTheme.Current == DsThemeKind.Dark);
+        bool hasImage = false;
+
+        if (value.Length > 0)
+        {
+            // SVG 里没写 fill 的图形用主题主文字色兜底（深浅各自可读），而不是 SVG 规范的黑色
+            var fallbackFill = DsTheme.ColorOf("BootTextPrimary");
+            hasImage = BrandLogo.TryLoad(value, _core.DshHome, fallbackFill, out var logo, out var reason);
+            if (hasImage)
+            {
+                LoaderLogoImage.Source = logo.Source;
+                LoaderLogoImage.Height = height;
+                LoaderLogoImage.Width = Math.Max(1, height * logo.Aspect);
+            }
+            else if (!_brandLogoWarned)
+            {
+                _brandLogoWarned = true;   // 只告警一次
+                LogLine($"[品牌] 标志读不出来，回落到内置鲸鱼：{reason}（配置值：{Shorten(value)}）", DshLogKind.Warn);
+            }
+        }
+
+        LoaderLogoImage.Visibility = hasImage ? Visibility.Visible : Visibility.Collapsed;
+        if (!hasImage) LoaderLogoImage.Source = null;
+
+        var builtIn = hasImage ? Visibility.Collapsed : Visibility.Visible;
+        LoaderWhale.Visibility = builtIn;
+        LoaderWordmark.Visibility = builtIn;
+        if (!hasImage)
+        {
+            // 内置鲸鱼也用同一高度（XAML 里原本写死 60×60，正方形保持不变）
+            LoaderWhale.Width = height;
+            LoaderWhale.Height = height;
+        }
+    }
+
+    /// <summary>日志里截断超长配置值（data URL 可能有几十万字符）。</summary>
+    private static string Shorten(string value)
+        => value.Length <= 80 ? value : value[..80] + "…";
+
+    /// <summary>把品牌配置的实际落点写成一行日志（验收用，不参与任何逻辑）。</summary>
+    private string DescribeBrand()
+    {
+        var logo = _brand.PickLogo(DsTheme.Current == DsThemeKind.Dark);
+        var accent = DsTheme.BrandAccent(DsTheme.Current);
+        var slogan = _brand.SloganOrNull();
+        return string.Concat(
+            "dsh-brand.json = ", _brand.ConfigPath,
+            _brand.FileExists ? string.Empty : "（不存在）",
+            _brand.LoadFailed ? "（解析失败，已用内置兜底）" : string.Empty,
+            "；标志 = ", logo.Length == 0 ? "内置鲸鱼 + 字标" : logo,
+            "；高度 = ", _brand.LogoHeight.ToString("0", CultureInfo.InvariantCulture), "px",
+            "；标语 = ", slogan is null ? "内置常量" : "配置项",
+            "；强调色 = ", accent is null ? "内置默认" : accent.Value.ToString(CultureInfo.InvariantCulture));
     }
 
     /// <summary>
@@ -712,7 +815,7 @@ public partial class MainWindow : Window
         if (LoaderPct is not null) LoaderPct.Text = "0%";
         if (LoaderStatus is not null) LoaderStatus.Text = "Checking...";
         if (LoaderMeter is not null) LoaderMeter.Margin = new Thickness(BootGutter, 0, 0, 0);
-        ApplyBootSlogan();
+        ApplyBootBranding();
 
         // wipe 幕布也复位：上次若没走完（异常路径），这里保证下次启动从「未展开」开始
         EndBootWipe(resetOverlayOpacity: true);

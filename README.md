@@ -4,7 +4,7 @@
 解压即用、无需预装 Node / .NET（只有用 PDF 阅读工具时才需要系统 Python 3 + `pymupdf`），
 数据全部收在包内 `dsh-home\`，不碰系统目录。
 
-本目录是上游便携包的一个**非官方**发行骨架：随包四个插件（详见下文）。
+本目录是上游便携包的一个**非官方**发行骨架：随包五个插件（详见下文）。
 桌面壳启动屏用 DeepSeek 鲸鱼矢量标志 + 「DeepSeek」字标（启动屏不内嵌任何第三方图片素材）。
 **发布包已整合离线依赖**：`DSH-portable-work-win-x64.zip` 内自带 pnpm 离线缓存 `store\`，
 解压后首启即**纯离线**重建 `node_modules`（`pnpm install --offline --frozen-lockfile`），不需要联网拉取 npm 包。
@@ -33,7 +33,7 @@
 | ❌ | **不是「完全不需要网络」**：调用 LLM API、联网搜索（`dsh-free-search`）、缺失 WebView2 时安装运行时、缺 `pymupdf` 时装它，仍然需要网络 |
 
 版本：`@deepseek-ai/dsh` **0.2.0-rc.2** · `dsh-pdf-reader` **^0.2.0** · `dsh-free-search` **0.6.5** ·
-`dsh-computer-use-win` **^0.2.3** · `dsh-latex` **0.2.0**（本地 `link:`）· Node **v24.19.0** · pnpm **11.19.0**
+`dsh-computer-use-win` **^0.2.3** · `dsh-latex` **0.2.0**（本地 `link:`）· `dsh-brand` **0.1.8**（本地 `link:`）· Node **v24.19.0** · pnpm **11.19.0**
 
 ---
 
@@ -125,6 +125,7 @@ powershell -ExecutionPolicy Bypass -File launcher\build-desktop.ps1   # 产出�
 | `dsh-pdf-reader` | ^0.2.0 | `pdf_scan` / `pdf_read_page` / `pdf_render_region` —— 本地 CPU 的 PDF 内容感知阅读 | **无捆绑运行时**；唯一外部依赖是**系统 Python 3 + `pymupdf`**（缺失只影响 PDF 工具） |
 | `dsh-free-search` | 0.6.5 | `web_search` / `advanced_search` / `multi_search` / `platform_search` 等联网检索 | 纯 JS，无运行时；**需要网络**（联网检索后端需可用） |
 | `dsh-computer-use-win` | ^0.2.3 | Windows 电脑控制（MCP，工具前缀 `mcp__wincu__*`） | 无（PowerShell + UI Automation） |
+| `dsh-brand` | 0.1.8 | 设置 → 品牌：商标/深浅双 logo/尺寸/主色/标语，同一份 `dsh-home\dsh-brand.json` 也驱动桌面启动屏 | `plugins\dsh-brand\` |
 | `dsh-latex` | 0.2.0 | `latex_health` / `latex_compile` / `latex_math` —— 自包含 LaTeX | `dsh-home\runtimes\latex-runtime-win32-x64`（Tectonic 0.17.0 + 预热 `minimal`/`chinese`/`common` TeX 资源缓存，约 133 MB）；**本地 `link:` 插件，随 DSH 目录一起升级** |
 
 `dsh-pdf-reader` 的工作方式：PyMuPDF 抽正文文本，再把图 / 表 / 公式区域渲染成高清 PNG
@@ -152,13 +153,14 @@ DSH-portable-work-win-x64\
 │                             （node_modules 不入库，首启用 store\ 离线重建）
 ├─ dsh-home\               DSH 主目录（启动时按包内路径推算 DSH_HOME）
 │  ├─ profiles\             profile 清单与锁文件
-│  │  ├─ web\                Web Profile：四个插件 + cordis.yml / cordis.patch.yml
+│  │  ├─ web\                Web Profile：五个插件 + cordis.yml / cordis.patch.yml
 │  │  └─ headless\           无界面 profile 的清单
 │  ├─ runtimes\              插件自带运行时
 │  │  └─ latex-runtime-win32-x64\   Tectonic 0.17.0 引擎 + 预热 TeX 资源缓存（约 133 MB，仅 dsh-latex 用）
 │  └─ cordis.patch.yml      LLM 路由：只有 DeepSeek 官方（deepseek-official）
 ├─ plugins\                随包插件源码
-│  └─ dsh-latex\            dsh-latex 0.2.0（本地 link: 依赖，随 DSH 目录一起升级）
+│  ├─ dsh-latex\            dsh-latex 0.2.0（本地 link: 依赖，随 DSH 目录一起升级）
+│  └─ dsh-brand\            dsh-brand 0.1.8（Web 品牌自定义 + 桌面启动屏共用配置，Apache-2.0）
 ├─ launcher\               桌面壳源码与构建脚本（.NET 9 / WPF）
 │  ├─ DshDesktop\           桌面版源码（WebView2 内嵌界面 + DshDesktop 启动屏）
 │  ├─ DshHub\               控制台源码（已存档，不再随包分发 DshHub.exe）

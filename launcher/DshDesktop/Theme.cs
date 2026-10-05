@@ -100,9 +100,10 @@ internal static class DsTheme
         //   * 启动屏底色严格二选一：浅色主题纯白 #FFFFFF，
         //     深色主题中性近黑 #0F1115（不是蓝色调）；
         //   * 文字不用强调色：浅色主题近黑，深色主题白/浅灰（可读性优先）；
-        //   * 标志是矢量：DeepSeek 鲸鱼 Path + "DeepSeek" 字标（见 MainWindow.xaml 的
+        //   * 标志默认是矢量：DeepSeek 鲸鱼 Path + "DeepSeek" 字标（见 MainWindow.xaml 的
         //     LoaderWhale / LoaderWordmark），填充色走 BootTextPrimary，随主题自动换色；
-        //     启动屏没有 Logo 图片文件，也没有 ApplyBootLogo() 之类的按主题换图逻辑。
+        //     若 dsh-brand.json 配了 logoUrl / logoUrlDark，则由 MainWindow.ApplyBootLogo()
+        //     换成该图片（位图或 SVG 渲染出的矢量图）并隐藏内置鲸鱼 + 字标。
         // =================================================================
         ("BootBg",             0xFF0F1115, 0xFFFFFFFF),   // 启动屏底色：近黑 / 纯白
         ("BootSurface",        0xFF16181D, 0xFFF6F7F9),   // 迷你日志面板底
@@ -230,6 +231,73 @@ internal static class DsTheme
     }
 
     // =====================================================================
+    //  品牌强调色覆盖（来自 <DSH_HOME>\dsh-brand.json 的 color / colorDark）
+    //
+    //  只覆盖启动屏的三个强调色键，外壳其它配色一律不动：
+    //   * BootRailFill    → 品牌色本体：竖向进度轨填充 + 仪表刻度（LoaderTick）；
+    //   * BootRailFillEnd → 品牌色「亮一档」：渐变扫光末端 + 100% 后的横向 wipe 幕布；
+    //   * BootAccentInk   → 百分比数字（深色主题下用亮一档保证可读）。
+    //
+    //  轨道渐变（LoaderFill / LoaderWipe / BootWipeMask）是 MainWindow.ApplyBootGradients()
+    //  用 ColorOf() 现拼的 LinearGradientBrush，所以这里改完资源，调用方重建渐变即可生效。
+    //  null = 该主题沿用内置默认色（json 里 color / colorDark 都留空）。
+    // =====================================================================
+    private static Color? _brandAccentLight;
+    private static Color? _brandAccentDark;
+
+    /// <summary>
+    /// 写入品牌强调色。<paramref name="light"/> / <paramref name="dark"/> 已经由调用方
+    /// 按主题解析好（暗色留空＝跟随浅色，与 Web 端 dsh-brand 的规则一致）；null = 该主题内置默认。
+    /// </summary>
+    public static void SetBrandAccent(Color? light, Color? dark)
+    {
+        _brandAccentLight = light;
+        _brandAccentDark = dark;
+    }
+
+    /// <summary>当前主题下实际生效的品牌强调色（未配置 = null，表示仍在用内置默认色）。</summary>
+    public static Color? BrandAccent(DsThemeKind kind)
+        => kind == DsThemeKind.Dark ? _brandAccentDark : _brandAccentLight;
+
+    /// <summary>
+    /// 命中启动屏三个强调色键时改写颜色并返回 true；其余键返回 false（不动）。
+    /// 「亮一档」的插值比例照抄内置调色板自身的颜色关系，这样**默认演示**
+    /// （color=#4D6BFE / colorDark=#9BB8FF）算出来的渐变末端与原来几乎逐像素一致：
+    ///   深色 #4D6BFE → #8FA6FF ≈ 提亮 0.40；浅色 #4D6BFE → #5E7BFF ≈ 提亮 0.10。
+    /// </summary>
+    private static bool BrandOverride(string key, DsThemeKind kind, ref Color color)
+    {
+        var accent = kind == DsThemeKind.Dark ? _brandAccentDark : _brandAccentLight;
+        if (accent is null) return false;
+        double lift = kind == DsThemeKind.Dark ? 0.40 : 0.10;
+        switch (key)
+        {
+            case "BootRailFill":
+                color = accent.Value;
+                return true;
+            case "BootRailFillEnd":
+                color = Lighten(accent.Value, lift);
+                return true;
+            case "BootAccentInk":
+                color = kind == DsThemeKind.Dark ? Lighten(accent.Value, lift) : accent.Value;
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    /// <summary>把颜色朝白色插值，得到同色系的「亮一档」（保持色相，只提亮度）。</summary>
+    public static Color Lighten(Color color, double amount)
+    {
+        amount = Math.Clamp(amount, 0, 1);
+        return Color.FromArgb(
+            color.A,
+            (byte)Math.Round(color.R + (255 - color.R) * amount),
+            (byte)Math.Round(color.G + (255 - color.G) * amount),
+            (byte)Math.Round(color.B + (255 - color.B) * amount));
+    }
+
+    // =====================================================================
     //  应用主题
     // =====================================================================
 
@@ -250,6 +318,8 @@ internal static class DsTheme
         {
             var color = FromArgb(kind == DsThemeKind.Dark ? dark : light);
             if (tokens is not null && TryToken(key, tokens, out var tc)) color = tc;
+            // 品牌强调色覆盖：只命中启动屏的那三个键（json 里配了 color / colorDark 才生效）
+            _ = BrandOverride(key, kind, ref color);
             if (Set(res, key, color)) changed = true;
         }
 

@@ -12,6 +12,8 @@ Copyright (c) 2026 Stellifex
   - dsh-free-search（联网搜索）
   - dsh-computer-use-win（Windows 电脑控制，MCP）
   - dsh-latex（自包含 LaTeX；引擎为 Tectonic，见下）
+  - dsh-brand（Web 界面品牌自定义；vendored 自 advance-lion/dsh-brand，Apache-2.0，
+    许可证原文随包保留在 plugins\dsh-brand\LICENSE）
 * 桌面壳 DshDesktop（`launcher\` 内的 C# / WPF 源码与预编译 `DshDesktop.exe`）——
   本发行版的启动器组件，随本仓库以 MIT 分发；内嵌界面使用
   Microsoft Edge WebView2（用户本机组件，见下）。

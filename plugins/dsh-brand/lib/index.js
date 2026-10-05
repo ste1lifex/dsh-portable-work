@@ -45,12 +45,16 @@ const LIMITS = {
   hideHeadline: 8,
   markHeight: 8,
   heroMarkHeight: 8,
+  // 桌面启动屏（DshDesktop）专用：桌面壳直接读同一份 $DSH_HOME/dsh-brand.json，
+  // 这两个字段不影响 Web 界面，改完需要重启 DshDesktop 生效。
+  bootSlogan: 400,
+  desktopLogoHeight: 8,
 }
 const KEYS = Object.keys(LIMITS)
 
 /** @returns every field empty (stock GUI branding). */
 function defaults() {
-  return { name: '', version: '', useDshVersion: 'true', headline: '', badge: '', intro: '', logoText: '', logoUrl: '', logoUrlDark: '', title: '', favicon: '', faviconDark: '', sendIcon: '', stopIcon: '', hideNotice: '', hideName: '', hideHeadline: '', thinkText: '', colorEnabled: 'true', colorTargets: 'sidebar,project,think,diving,composer', color: '', colorDark: '', markHeight: '', heroMarkHeight: '' }
+  return { name: '', version: '', useDshVersion: 'true', headline: '', badge: '', intro: '', logoText: '', logoUrl: '', logoUrlDark: '', title: '', favicon: '', faviconDark: '', sendIcon: '', stopIcon: '', hideNotice: '', hideName: '', hideHeadline: '', thinkText: '', colorEnabled: 'true', colorTargets: 'sidebar,project,think,diving,composer', color: '', colorDark: '', markHeight: '', heroMarkHeight: '', bootSlogan: '', desktopLogoHeight: '' }
 }
 
 /** Resolve the running DSH build badge without persisting it in brand config. */

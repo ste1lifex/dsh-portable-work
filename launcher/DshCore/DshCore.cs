@@ -76,7 +76,14 @@ public sealed class DshCore
     // =====================================================================
 
     public string AppDir => Path.Combine(Root, "app-npm");
-    public string ProfilesWeb => Path.Combine(Root, "dsh-home", "profiles", "web");
+    /// <summary>
+    /// DSH_HOME（便携包根目录下的 dsh-home）。按 exe 位置推算，不写死盘符；
+    /// 桌面壳与 Web 端 dsh-brand 插件读的 <see cref="BrandConfigFile"/> 就在这里。
+    /// </summary>
+    public string DshHome => Path.Combine(Root, "dsh-home");
+    /// <summary>品牌配置文件：$DSH_HOME/dsh-brand.json（Web 设置界面写的就是这一份）。</summary>
+    public string BrandConfigFile => Path.Combine(DshHome, "dsh-brand.json");
+    public string ProfilesWeb => Path.Combine(DshHome, "profiles", "web");
     public string CorePkgJson => Path.Combine(AppDir, "node_modules", "@deepseek-ai", "dsh", "package.json");
     public string CoreBinJs => Path.Combine(AppDir, "node_modules", "@deepseek-ai", "dsh", "lib", "bin.js");
     public string PidFile => Path.Combine(Root, "dsh.pid");
@@ -678,7 +685,8 @@ public sealed class DshCore
         ("dsh-pdf-reader", "PDF 智能阅读", false),
         ("dsh-free-search", "Free Search 联网搜索", false),
         ("dsh-computer-use-win", "Windows 电脑控制", false),
-        ("dsh-latex", "dsh-latex 自包含 LaTeX", true)
+        ("dsh-latex", "dsh-latex 自包含 LaTeX", true),
+        ("dsh-brand", "dsh-brand 品牌自定义", true)
     };
 
     /// <summary>计算一行版本的显示信息：本地→最新、徽章文本。</summary>

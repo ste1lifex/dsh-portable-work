@@ -3,6 +3,7 @@
     { "name": "dsh-pdf-reader", "label": "PDF 智能阅读" },
     { "name": "dsh-free-search", "label": "Free Search 联网搜索" },
     { "name": "dsh-computer-use-win", "label": "Windows 电脑控制" },
-    { "name": "dsh-latex", "label": "dsh-latex 自包含 LaTeX", "local": true }
+    { "name": "dsh-latex", "label": "dsh-latex 自包含 LaTeX", "local": true },
+    { "name": "dsh-brand", "label": "dsh-brand 品牌自定义", "local": true }
   ]
 }
