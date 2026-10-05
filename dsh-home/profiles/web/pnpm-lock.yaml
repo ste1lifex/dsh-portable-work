@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      dsh-brand:
+        specifier: link:../../../plugins/dsh-brand
+        version: link:../../../plugins/dsh-brand
       dsh-computer-use-win:
         specifier: ^0.2.3
         version: 0.2.3

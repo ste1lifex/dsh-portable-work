@@ -2,6 +2,7 @@
   "name": "dsh-profile-web",
   "private": true,
   "dependencies": {
+    "dsh-brand": "link:../../../plugins/dsh-brand",
     "dsh-computer-use-win": "^0.2.3",
     "dsh-free-search": "0.6.5",
     "dsh-latex": "link:../../../plugins/dsh-latex",
@@ -16,7 +17,8 @@
         "dsh-computer-use-win",
         "dsh-latex",
         "@deepseek-ai/dsh-experimental-voice-input-bundle",
-        "dsh-pdf-reader"
+        "dsh-pdf-reader",
+        "dsh-brand"
       ]
     }
   }
