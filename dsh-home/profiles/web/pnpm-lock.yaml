@@ -12,11 +12,11 @@ importers:
         specifier: link:../../../plugins/dsh-brand
         version: link:../../../plugins/dsh-brand
       dsh-computer-use-win:
-        specifier: ^0.2.3
-        version: 0.2.3
+        specifier: ^0.2.4
+        version: 0.2.4
       dsh-free-search:
-        specifier: 0.6.5
-        version: 0.6.5
+        specifier: 0.7.4
+        version: 0.7.4
       dsh-latex:
         specifier: link:../../../plugins/dsh-latex
         version: link:../../../plugins/dsh-latex
@@ -35,14 +35,14 @@ packages:
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
-  dsh-computer-use-win@0.2.3:
-    resolution: {integrity: sha512-JpOoZZ7ieyXkibBPOf2xRFZUEGOrsBYijWeAwXYTJmQDfyVOnOWTH/Zoim1WCXyp4wMkyNigwhw/nzWINo7KlQ==}
+  dsh-computer-use-win@0.2.4:
+    resolution: {integrity: sha512-85J3+A6hy/0i73KuvjSruPQzjjJ8Libbh5gtysB8c5xIj2O5kAP5ReiNIsNIG2dw+pldlA7IeWiwdNiSvx1D3Q==}
     engines: {node: '>=22'}
     os: [win32]
     hasBin: true
 
-  dsh-free-search@0.6.5:
-    resolution: {integrity: sha512-jpIXxWnVH6Wc6KdrnttmPhUIyQ4kqi31/y3iPACO7kDTlcCmRBVsP5KbQgsSec68nrgJ+8dAmY57u14ObLfJ6Q==}
+  dsh-free-search@0.7.4:
+    resolution: {integrity: sha512-HDxIJ5LHp6KeiTNi86/LLwJ5QCzVAjxsQzqbW2JiejyUGbEpfTN0IUPBpIZUIftoKTSo0eaH8ZSp7UBNoysHeQ==}
     engines: {node: '>=20'}
     peerDependencies:
       '@deepseek-ai/cordis': ^4.0.1
@@ -85,9 +85,9 @@ snapshots:
 
   '@standard-schema/spec@1.1.0': {}
 
-  dsh-computer-use-win@0.2.3: {}
+  dsh-computer-use-win@0.2.4: {}
 
-  dsh-free-search@0.6.5:
+  dsh-free-search@0.7.4:
     dependencies:
       '@deepseek-ai/schemastery': 3.18.4
 

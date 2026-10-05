@@ -3,8 +3,8 @@
   "private": true,
   "dependencies": {
     "dsh-brand": "link:../../../plugins/dsh-brand",
-    "dsh-computer-use-win": "^0.2.3",
-    "dsh-free-search": "0.6.5",
+    "dsh-computer-use-win": "^0.2.4",
+    "dsh-free-search": "0.7.4",
     "dsh-latex": "link:../../../plugins/dsh-latex",
     "dsh-pdf-reader": "^0.2.0"
   },
