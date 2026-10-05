@@ -28,6 +28,28 @@ window.__ModuleLoader__.load({
       return { name: '', version: '', useDshVersion: 'true', dshBuildVersion: '', headline: '', badge: '', intro: '', logoText: '', logoUrl: '', logoUrlDark: '', title: '', favicon: '', faviconDark: '', sendIcon: '', stopIcon: '', hideNotice: '', hideName: '', hideHeadline: '', thinkText: '', colorEnabled: 'true', colorTargets: ALL_COLOR_TARGETS, color: '', colorDark: '', markHeight: '', heroMarkHeight: '', bootSlogan: '', desktopLogoHeight: '' }
     }
 
+    /**
+     * 首屏注入的 window.__DSH_BRAND__（服务端每次请求都按当前配置重算）。
+     * 设置界面的 fetch 失败时（例如 cookie 不一致导致 401）用它兜底，
+     * 否则表单会被 blank() 填成全空 —— 看起来就像"什么都没配"。
+     */
+    function bootConfig() {
+      const boot = typeof window === 'object' && window !== null ? window.__DSH_BRAND__ : undefined
+      return boot !== null && typeof boot === 'object' ? boot : null
+    }
+
+    /** 空字段用首屏注入的配置补齐。 */
+    function mergeBoot(cfg) {
+      const boot = bootConfig()
+      if (boot === null) return cfg
+      const out = { ...cfg }
+      for (const key of KEYS) {
+        const has = typeof out[key] === 'string' && out[key] !== ''
+        if (!has && typeof boot[key] === 'string' && boot[key] !== '') out[key] = boot[key]
+      }
+      return out
+    }
+
     /** Keep only known string fields (server already caps their length). */
     function clean(input) {
       const out = blank()
@@ -604,8 +626,8 @@ window.__ModuleLoader__.load({
           let alive = true
           fetch(API)
             .then((res) => res.json())
-            .then((cfg) => { if (alive) setForm(clean(cfg)) })
-            .catch(() => { if (alive) setForm(blank()) })
+            .then((cfg) => { if (alive) setForm(mergeBoot(clean(cfg))) })
+            .catch(() => { if (alive) setForm(mergeBoot(blank())) })
           return () => { alive = false }
         }, [])
         const logoForColor = form === null ? '' : form.logoUrl
