@@ -73,7 +73,7 @@ U 盘分卷 / 分块传输时）：它把 `store\` 从主包排除、单独压�
    把输出的 Hash 与 Release 说明里的值逐字符比对，不一致就别解压。
 4. 任选一个入口启动：
    - 双击 **`DshDesktop.exe`** —— 原生窗口（内嵌 WebView2），带状态 / 启停 / 版本信息 / 日志 / 余额；
-   - 双击 **`start-dsh.bat`** —— 命令行启动，用系统浏览器打开 `http://127.0.0.1:3099`。
+   - 双击 **`start-dsh.bat`** —— 命令行启动，用系统浏览器打开 `http://127.0.0.1:3098`。
 5. 首次启动会用包内 `store\` **纯离线**展开依赖（约 2–5 分钟，全程不联网，实测见下文「离线能力与升级注意事项」）。
 6. 首启若没有 `app-npm\.env`，会从 `.env.example` 生成模板，把 `DEEPSEEK_API_KEY` 填进去再重启即可。
    本发行版**只使用 DeepSeek 官方模型**：模型路由固定在 `dsh-home\cordis.patch.yml` 的
@@ -172,7 +172,7 @@ DSH-portable-work-win-x64\
 ├─ tools\                  fetch-node.ps1（取 Node + pnpm）/ pack-portable.ps1（组装发布包）/ pnpm.cmd
 ├─ docs\                   内部笔记与调研（web-search-backends-research.md）
 ├─ dist\                   打包输出（pack-portable.ps1 产物，不入库）
-├─ start-dsh.ps1 / .bat    启动：环境自检 → 离线重建依赖 → 起服务（端口 3099）
+├─ start-dsh.ps1 / .bat    启动：环境自检 → 离线重建依赖 → 起服务（端口 3098）
 ├─ stop-dsh.ps1 / .bat     停止
 ├─ repair-deps.ps1         只重建依赖，不启动
 ├─ rollback-dsh.ps1        回滚到升级前备份
@@ -238,7 +238,7 @@ DSH-portable-work-win-x64\
 | 路径带空格 / 中文，能跑吗 | 脚本内部统一用 `-LiteralPath` 与相对路径解析，一般没问题；但个别第三方原生工具对中文或空格路径敏感，遇到难以定位的报错时，先换到纯英文无空格的短路径（如 `D:\DSH`）复现一下 |
 | 整个文件夹搬到别的盘 / 别的机器 | 可以，直接搬。搬动后本地 `link:` 插件的 `node_modules` 链接（junction）可能失效，`start-dsh.ps1` 启动时会按 `package.json` 检测缺失并**自动重建 junction**（打印「已重建本地插件链接」）；确认 `store\` 跟着一起搬过去了 |
 | 浏览器打开是 401 | 裸地址会被拒；用核心打印的带 token 地址（`logs\dsh-web.out.log` 里 `dsh web:` 那条），或直接用 `DshDesktop.exe` |
-| 端口 3099 被占用 / 提示已在运行 | 脚本检测到端口已监听会直接打开界面；要换端口或彻底重启，先跑 `stop-dsh.bat` |
+| 端口 3098 被占用 / 提示已在运行 | 脚本检测到端口已监听会直接打开界面；要换端口或彻底重启，先跑 `stop-dsh.bat` |
 | 升级后起不来 | `rollback-dsh.ps1 -List` / `-Restore <备份名>` |
 
 ---

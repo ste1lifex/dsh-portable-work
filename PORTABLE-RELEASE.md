@@ -162,7 +162,7 @@ Get-ChildItem .\dist\*.zip | Select-Object Name, @{n='GiB';e={[math]::Round($_.L
    - `dsh-pdf-reader`：无捆绑运行时，只**报告**系统 Python 3 + `pymupdf` 的可用性，不阻止启动；
    - 校验 `dsh-home\runtimes\latex-runtime-win32-x64`，失败才需要联网重下；彻底恢复不了就写一份
      只禁用 `dsh-latex` 的临时补丁，其余功能不受影响；
-   - 启动核心（端口 3099，`DSH_NO_UPDATE_CHECK=1`），核心自己打开带认证 token 的地址。
+   - 启动核心（端口 3098，`DSH_NO_UPDATE_CHECK=1`），核心自己打开带认证 token 的地址。
 4. 首启若没有 `app-npm\.env`，从 `.env.example` 生成模板并提示填写 `DEEPSEEK_API_KEY`。
 5. **升级方式不是 `update-dsh.ps1`**：它需要访问外部 npm registry；本发行版的升级方式是下载新的 Release
    整包替换 —— 维护者重打包并更新 Release，用户整包替换。

@@ -308,7 +308,7 @@ function Repair-TaskBoardLockAfterVerify {
 function Verify-Boot {
     Write-Step '升级后启动自检……'
     $nodeExe = Join-Path $root 'node\bin\node.exe'
-    $port = 3099
+    $port = 3098
     $out = Join-Path $logDir 'verify-boot.out.log'
     $err = Join-Path $logDir 'verify-boot.err.log'
     $env:DSH_HOME = Join-Path $root 'dsh-home'

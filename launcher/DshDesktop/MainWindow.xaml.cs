@@ -1215,7 +1215,7 @@ public partial class MainWindow : Window
         try { await WebView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(earlyScript); }
         catch { /* 注入失败不影响主流程 */ }
 
-        // 拦截所有导航：只允许 DSH 本地界面（127.0.0.1:3099）在内嵌 WebView 中渲染；
+        // 拦截所有导航：只允许 DSH 本地界面（127.0.0.1:3098）在内嵌 WebView 中渲染；
         // 外部链接（含 target=_blank 弹窗）一律交给系统默认浏览器，避免卡在内嵌页。
         WebView.CoreWebView2.NavigationStarting += (_, e) =>
         {

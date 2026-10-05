@@ -1,7 +1,7 @@
 ﻿param(
-    # 默认端口 3099：本实例常驻 3099，主开发目录的 GUI 常驻 3080。
+    # 默认端口 3098：本实例常驻 3098，主开发目录的 GUI 常驻 3080。
     # 就算这里误传成 3080，下面有身份校验，也不会杀到主 GUI。
-    [int]$Port = 3099
+    [int]$Port = 3098
 )
 
 $ErrorActionPreference = 'SilentlyContinue'
@@ -12,7 +12,7 @@ $killed = @()
 
 # ---- 身份校验：只允许结束"命令行里带本实例路径"的进程 ----
 # 两个实例都叫 node.exe，但命令行分别指向各自目录：
-#   本实例: ...\deepseek-harness-local\node\bin\node.exe ... --port 3099
+#   本实例: ...\deepseek-harness-local\node\bin\node.exe ... --port 3098
 #   主 GUI: ...\deepseek-harness\node\bin\node.exe      ... --port 3080
 # 用"根路径 + 尾部反斜杠"作标记，二者互不匹配，从机制上杜绝跨杀。
 $marker = [regex]::Escape($root.TrimEnd('\') + '\')

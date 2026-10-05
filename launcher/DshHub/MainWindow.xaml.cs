@@ -28,7 +28,7 @@ public sealed class LogLine
 
 public partial class MainWindow : Window
 {
-    private const int Port = 3099;
+    private const int Port = 3098;
 
     private static readonly Brush BDefault = Freeze(0xC9D1DF);
     private static readonly Brush BDim = Freeze(0x6B7484);

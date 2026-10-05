@@ -79,3 +79,5 @@ Desktop.ini
 .vs/
 .idea/
 .vscode/
+# dsh-brand 插件的品牌配置（运行态，随部署环境变化）
+dsh-home/dsh-brand.json

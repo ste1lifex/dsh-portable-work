@@ -1,7 +1,7 @@
 ﻿param(
-    # 默认端口 3099：主开发目录的 GUI 常驻 3080，local 包避开它，
+    # 默认端口 3098：主开发目录的 GUI 常驻 3080，local 包避开它，
     # 两个实例可以同时运行。如需临时换端口: start-dsh.ps1 -Port 1234
-    [int]$Port = 3099,
+    [int]$Port = 3098,
     # 内嵌桌面界面（DshDesktop）用：不自动打开外部浏览器
     [switch]$NoOpen
 )

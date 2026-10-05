@@ -22,7 +22,7 @@ public enum DshLogKind { Default, Dim, Info, Good, Warn, Bad, Accent }
 /// </summary>
 public sealed class DshCore
 {
-    public const int Port = 3099;
+    public const int Port = 3098;
 
     /// <summary>写日志行（UI 线程外调用时请自行 marshal）</summary>
     public Action<string, DshLogKind>? Log { get; set; }
