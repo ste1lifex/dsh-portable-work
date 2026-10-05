@@ -745,8 +745,8 @@ window.__ModuleLoader__.load({
           field('stopIcon', '停止按钮图标（图片 URL / Data URL / SVG）', '留空使用系统停止方块；如：https://…/stop.svg'),
           field('thinkText', '思考状态文字（Think / Deep diving）', '如：思考中；留空使用系统文字'),
           section('尺寸与显示'),
-          field('markHeight', '侧栏商标高度 px（留空＝45）', '如：45'),
-          field('heroMarkHeight', 'Hero 商标高度 px（留空＝128）', '如：128'),
+          field('markHeight', '侧栏商标高度 px（留空＝30）', '如：30'),
+          field('heroMarkHeight', 'Hero 商标高度 px（留空＝60）', '如：60'),
           // 桌面启动屏（DshDesktop）：桌面壳启动时直接读同一份 $DSH_HOME/dsh-brand.json，
           // 这里只管写文件；改完要重启 DshDesktop 才会看到效果（不做文件监听）。
           section('桌面启动屏（DshDesktop）'),
