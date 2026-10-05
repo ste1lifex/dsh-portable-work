@@ -10,15 +10,74 @@
  *    stylesheet hides the shell's stock headline/badge spans)
  *  - document.title                           (tab title, re-asserted because
  *    the shell rewrites it on every session change)
- * Config arrives from GET /api/dsh-brand/config; the settings page writes it
- * back with PUT. Every registration is disposed on unload.
+ * Config arrives from the brand config endpoint; the settings page writes it
+ * back with PUT. The endpoint is tried as ["/api/dsh-brand/config",
+ * "/dsh-brand/config"] because the Host route table differs per build/instance.
+ * Every registration is disposed on unload.
  */
 window.__ModuleLoader__.load({
   id: 'dsh-brand',
   factory: (require) => {
     const React = require('react')
     const h = React.createElement
-    const API = '/api/dsh-brand/config'
+    /**
+     * 候选端点：核心不同版本 / 不同组合下，插件路由可能挂在根路径，
+     * 也可能挂在 `/api` 前缀下（实测两者都出现过）。按顺序尝试，
+     * 遇到 404 换下一个，其余状态码直接交给调用方判断。
+     */
+    const API_CANDIDATES = ['/api/dsh-brand/config', '/dsh-brand/config']
+
+    /** 把真正应答的端点路径记在 Response 上，供错误提示使用。 */
+    function endpointOf(res) {
+      const tagged = res !== null && typeof res === 'object' ? res.__dshBrandEndpoint : undefined
+      if (typeof tagged === 'string' && tagged !== '') return tagged
+      try {
+        if (res !== null && typeof res === 'object' && typeof res.url === 'string' && res.url !== '') {
+          return new URL(res.url, window.location.href).pathname
+        }
+      } catch (_error) { /* fall through */ }
+      return API_CANDIDATES[0]
+    }
+
+    /** 非 2xx 的 HTTP 错误：带上状态码与端点路径（人话版本）。 */
+    function httpErrorMessage(res) {
+      const status = res !== null && typeof res === 'object' ? res.status : 0
+      const reason = status === 401 || status === 403 ? '（同源校验失败或未授权）'
+        : status === 405 ? '（方法不被允许）'
+          : status === 500 ? '（Host 处理出错，文件可能没写进去）'
+            : ''
+      return 'HTTP ' + status + ' ' + endpointOf(res) + reason
+    }
+
+    /** 两个候选端点全部 404：给出手动兜底路径。 */
+    function allNotFoundMessage() {
+      return '两个端点都不可用（HTTP 404）：可直接编辑 <DSH_HOME>\\dsh-brand.json，或重启一次 dsh web'
+    }
+
+    /** 按候选顺序尝试端点，返回第一个非 404 的 Response。 */
+    async function apiFetch(init) {
+      let lastError = null
+      for (const path of API_CANDIDATES) {
+        let res
+        try {
+          res = await fetch(path, init)
+        } catch (error) {
+          // 网络层失败（连接被拒 / 页面已卸载）也继续试下一个候选。
+          lastError = error
+          continue
+        }
+        try {
+          Object.defineProperty(res, '__dshBrandEndpoint', { value: path, configurable: true })
+        } catch (_error) { /* frozen Response: endpointOf falls back to res.url */ }
+        if (res.status === 404) continue
+        return res
+      }
+      const hint = '可直接编辑 <DSH_HOME>\\dsh-brand.json，或重启一次 dsh web'
+      throw new Error(lastError === null
+        ? allNotFoundMessage()
+        : '两个端点都不可用（请求失败：' + String(lastError) + '）：' + hint)
+    }
+
     const KEYS = ['name', 'version', 'useDshVersion', 'headline', 'badge', 'intro', 'logoText', 'logoUrl', 'logoUrlDark', 'title', 'favicon', 'faviconDark', 'sendIcon', 'stopIcon', 'hideNotice', 'hideName', 'hideHeadline', 'thinkText', 'colorEnabled', 'colorTargets', 'color', 'colorDark', 'markHeight', 'heroMarkHeight', 'bootSlogan', 'desktopLogoHeight']
     const RUNTIME_KEYS = KEYS.concat(['dshBuildVersion']).concat(KEYS.map((k) => k + 'Resolved'))
     const ALL_COLOR_TARGETS = 'sidebar,project,think,diving,composer'
@@ -624,7 +683,7 @@ window.__ModuleLoader__.load({
         const [autoColor, setAutoColor] = React.useState('#ff6b1a')
         React.useEffect(() => {
           let alive = true
-          fetch(API)
+          apiFetch()
             .then((res) => res.json())
             .then((cfg) => { if (alive) setForm(mergeBoot(clean(cfg))) })
             .catch(() => { if (alive) setForm(mergeBoot(blank())) })
@@ -707,13 +766,13 @@ window.__ModuleLoader__.load({
           payload[key] = (imageFields.indexOf(key) !== -1 && !isLocalPath) ? ensureDataUrl(cfg[key]) : cfg[key]
           }
           setStatus(pending)
-          fetch(API, {
+          apiFetch({
             method: 'PUT',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify(payload),
           })
             .then((res) => {
-              if (!res.ok) throw new Error('HTTP ' + res.status)
+              if (!res.ok) throw new Error(httpErrorMessage(res))
               return res.json()
             })
             .then((saved) => {
@@ -730,7 +789,7 @@ window.__ModuleLoader__.load({
               setForm(normalized)
               setStatus(done)
             })
-            .catch((error) => { setStatus('操作失败：' + String(error)) })
+            .catch((error) => { setStatus('操作失败：' + (error instanceof Error ? error.message : String(error))) })
         }
         return h('div', { className: 'dsh-brand-form' },
           h('div', { className: 'dsh-brand-hint' },
@@ -857,7 +916,7 @@ window.__ModuleLoader__.load({
 
       // Then reconcile with the live file (covers saves made after this HTML
       // was served); a same-value response is a no-op.
-      fetch(API)
+      apiFetch()
         .then((res) => res.json())
         .then((raw) => {
           const cfg = clean(raw)

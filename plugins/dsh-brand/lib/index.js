@@ -6,10 +6,11 @@
  * forks. All fields are optional strings; an empty field keeps the stock GUI
  * fallback for that slot.
  *
- * Routes:
- *  - GET  /api/dsh-brand/config   -> the sanitized config object
- *  - PUT  /api/dsh-brand/config   <- a full or partial config object; writes
- *                                    the file and returns the sanitized result
+ * Routes (registered on BOTH paths; the client tries them in order):
+ *  - GET  /dsh-brand/config  and  /api/dsh-brand/config   -> the sanitized config
+ *  - PUT  /dsh-brand/config  and  /api/dsh-brand/config   <- a full or partial
+ *                                    config object; writes the file and returns
+ *                                    the sanitized result
  */
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
@@ -213,36 +214,73 @@ function sameOrigin(req) {
   }
 }
 
+/**
+ * 配置端点同时挂两条路径：核心不同版本 / 不同组合可能把插件路由挂在根路径，
+ * 也可能挂在 `/api` 前缀下，实测两种情况都出现过。客户端按候选顺序回退，
+ * 宿主这里两条都注册，任一存在即可读写。
+ */
+const CONFIG_ROUTES = ['/dsh-brand/config', '/api/dsh-brand/config']
+
+/** 记录一条注册失败，但绝不让另一条注册跟着失败。 */
+function logRouteFailure(ctx, path, error) {
+  const detail = error instanceof Error ? error.message : String(error)
+  try {
+    const line = `[dsh-brand] route ${path} registration failed: ${detail}`
+    if (ctx && ctx.logger && typeof ctx.logger.warn === 'function') ctx.logger.warn(line)
+    else console.error(line)
+  } catch (_ignored) {
+    /* logging must never break registration */
+  }
+}
+
 export function apply(ctx) {
-  ctx.effect(() => ctx.webServer.register({
-    kind: 'exact',
-    path: '/dsh-brand/config',
-    methods: ['GET', 'PUT', 'POST'],
-    handler: async (req, res) => {
-      try {
-        if (req.method === 'GET') {
-          sendJson(res, 200, publicConfig())
-          return
-        }
-        if (req.method === 'PUT' || req.method === 'POST') {
-          if (!sameOrigin(req)) {
-            sendJson(res, 403, { error: 'untrusted origin' })
-            return
-          }
-          const next = sanitize(await readBody(req))
-          writeConfig(next)
-          // 返回和 GET 完全同构的结果（含 *Resolved 渲染值），
-          // 否则界面保存后拿不到解析后的图片值，会把相对路径当文字渲染。
-          sendJson(res, 200, publicConfig())
-          return
-        }
-        res.writeHead(405, { allow: 'GET, PUT, POST' })
-        res.end()
-      } catch (error) {
-        sendJson(res, 500, { error: error instanceof Error ? error.message : String(error) })
+  // 两条路径共用同一个 handler：同源校验、读体、写文件、回读逻辑只有一份。
+  const handler = async (req, res) => {
+    try {
+      if (req.method === 'GET') {
+        sendJson(res, 200, publicConfig())
+        return
       }
-    },
-  }), 'dsh-brand: config route')
+      if (req.method === 'PUT' || req.method === 'POST') {
+        if (!sameOrigin(req)) {
+          sendJson(res, 403, { error: 'untrusted origin' })
+          return
+        }
+        const next = sanitize(await readBody(req))
+        writeConfig(next)
+        // 返回和 GET 完全同构的结果（含 *Resolved 渲染值），
+        // 否则界面保存后拿不到解析后的图片值，会把相对路径当文字渲染。
+        sendJson(res, 200, publicConfig())
+        return
+      }
+      res.writeHead(405, { allow: 'GET, PUT, POST' })
+      res.end()
+    } catch (error) {
+      sendJson(res, 500, { error: error instanceof Error ? error.message : String(error) })
+    }
+  }
+
+  ctx.effect(() => {
+    const disposers = []
+    for (const path of CONFIG_ROUTES) {
+      try {
+        disposers.push(ctx.webServer.register({
+          kind: 'exact',
+          path,
+          methods: ['GET', 'PUT', 'POST'],
+          handler,
+        }))
+      } catch (error) {
+        // 例如该路径已被占用（重复注册）。吞掉这一条的错误，继续注册下一条。
+        logRouteFailure(ctx, path, error)
+      }
+    }
+    return () => {
+      for (const dispose of disposers) {
+        try { dispose() } catch (error) { /* double dispose is harmless */ }
+      }
+    }
+  }, 'dsh-brand: config route')
 
   // Stamp the current config into the served HTML so the client bundle applies
   // branding synchronously at boot — no fallback-logo flash while a fetch is
